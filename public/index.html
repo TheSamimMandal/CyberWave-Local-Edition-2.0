@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#16a34a" />
+  <meta name="color-scheme" content="light" />
+  <title>Cyberwave Wi-Fi</title>
+  <style>
+    /* Fonts: system only (the portal must load before the user has internet). */
+    :root{
+      color-scheme:light;
+      --white:#fff; --bg:#f6fcf8;
+      --g50:#f0faf4; --g100:#ddf6e7; --g200:#bdebd0; --g300:#8fdcae; --g400:#4cc47c;
+      --g500:#22b05a; --g600:#16a34a; --g700:#12823d; --g800:#0f5a31; --g900:#0a3d22;
+      --ink:#0b2e1b; --muted:#5a7867; --line:#d9eee1;
+      --shadow-s:0 2px 10px -4px rgba(15,90,49,.18);
+      --shadow-m:0 14px 34px -14px rgba(15,90,49,.34);
+      --shadow-l:0 26px 50px -22px rgba(15,90,49,.45);
+      --font:"Hind Siliguri","Noto Sans Bengali","Kalpurush","Nirmala UI","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--font);background:var(--white);color:var(--ink);min-height:100vh;overflow-x:hidden;position:relative;line-height:1.55}
+    /* soft green shades on a white page */
+    body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:
+      radial-gradient(520px 340px at 100% -4%,rgba(76,196,124,.20),transparent 70%),
+      radial-gradient(460px 360px at -8% 42%,rgba(34,176,90,.11),transparent 72%),
+      radial-gradient(520px 300px at 70% 108%,rgba(143,220,174,.25),transparent 72%)}
+    .glow-sphere{position:fixed;width:340px;height:340px;border-radius:50%;left:50%;top:38%;transform:translateX(-50%);pointer-events:none;opacity:0;transition:opacity .5s;z-index:0}
+    .glow-sphere.waiting-glow{background:radial-gradient(circle,rgba(76,196,124,.20),transparent 70%);opacity:1}
+    .glow-sphere.success-glow{background:radial-gradient(circle,rgba(34,176,90,.28),transparent 70%);opacity:1}
+    .glow-sphere.rejected-glow{background:radial-gradient(circle,rgba(143,220,174,.22),transparent 70%);opacity:1}
+    .container{width:100%;max-width:520px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) 16px calc(26px + env(safe-area-inset-bottom));position:relative;z-index:1}
+    svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+    /* ---------- top bar ---------- */
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 2px 14px}
+    .brand{display:flex;align-items:center;gap:11px;min-width:0}
+    .logo{width:46px;height:46px;border-radius:15px;background:linear-gradient(145deg,var(--g500),var(--g700));display:grid;place-items:center;color:#fff;box-shadow:0 10px 20px -8px rgba(18,130,61,.65), inset 0 1px 0 rgba(255,255,255,.35);flex-shrink:0}
+    .logo svg{width:26px;height:26px}
+    .brand b{font-size:1.32rem;letter-spacing:-.025em;display:block;line-height:1.05;color:var(--g900);font-weight:800}
+    .brand b span{color:var(--g500)}
+    .brand small{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.74rem;font-weight:500;margin-top:2px}
+    .brand small::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--g500);box-shadow:0 0 0 3px rgba(34,176,90,.2)}
+    .lang-toggle{display:inline-flex;background:var(--white);border:1px solid var(--line);border-radius:14px;padding:3px;flex-shrink:0;box-shadow:var(--shadow-s)}
+    .lang-btn{border:0;background:transparent;color:var(--muted);padding:6px 12px;border-radius:11px;font:700 .76rem var(--font);cursor:pointer;transition:.2s}
+    .lang-btn.active{background:var(--g600);color:#fff;box-shadow:0 6px 12px -6px rgba(18,130,61,.8)}
+
+    /* ---------- hero ---------- */
+    .hero{position:relative;overflow:hidden;border-radius:28px;aspect-ratio:8/5.4;min-height:250px;background:var(--g50);border:1px solid rgba(255,255,255,.9);box-shadow:var(--shadow-l)}
+    .hero-art{position:absolute;inset:0;width:100%;height:100%}
+    .hero-text{position:absolute;left:0;top:0;padding:20px 20px 0;max-width:74%;z-index:2}
+    .hero h2{font-size:clamp(1.28rem,5.6vw,1.75rem);line-height:1.28;letter-spacing:-.01em;color:var(--g900);font-weight:800}
+    .hero p{margin-top:7px;font-size:.84rem;font-weight:600;color:var(--g700);display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.78);padding:3px 11px 3px 8px;border-radius:99px;backdrop-filter:blur(4px)}
+    .hero p svg{width:15px;height:15px}
+    .arc{animation:arc 2.4s ease-in-out infinite}
+    .arc.a2{animation-delay:.3s}.arc.a3{animation-delay:.6s}
+    @keyframes arc{0%,100%{opacity:.25}45%{opacity:1}}
+
+    /* ---------- tab bar ---------- */
+    .tabbar{position:relative;z-index:3;margin:-30px 10px 0;background:var(--white);border:1px solid var(--line);border-radius:22px;padding:6px;display:grid;grid-template-columns:repeat(4,1fr);box-shadow:var(--shadow-m)}
+    .tabbar .ind{position:absolute;top:6px;bottom:6px;left:6px;width:calc((100% - 12px)/4);border-radius:16px;background:linear-gradient(145deg,var(--g500),var(--g700));box-shadow:0 10px 20px -10px rgba(18,130,61,.9);transform:translateX(calc(var(--i,0)*100%));transition:transform .32s cubic-bezier(.3,.8,.3,1)}
+    .tabbtn{position:relative;z-index:1;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 2px 8px;border-radius:16px;font:700 .76rem var(--font);color:var(--muted);cursor:pointer;transition:color .25s}
+    .tabbtn svg{width:21px;height:21px}
+    .tabbtn.active{color:#fff}
+    .tabbtn:focus-visible,.btn:focus-visible,.lang-btn:focus-visible,summary:focus-visible{outline:3px solid rgba(34,176,90,.45);outline-offset:2px}
+
+    /* ---------- generic ---------- */
+    .notice{display:flex;gap:10px;align-items:flex-start;background:linear-gradient(135deg,var(--g50),#fff);border:1px solid var(--g200);border-radius:18px;padding:12px 14px;font-size:.78rem;color:var(--g800);margin:16px 0 0}
+    .notice .nic{width:30px;height:30px;border-radius:10px;background:var(--g100);color:var(--g700);display:grid;place-items:center;flex-shrink:0}
+    .notice .nic svg{width:17px;height:17px}
+    .notice b{color:var(--g900)}
+    .alert{display:none;align-items:flex-start;gap:9px;padding:12px 14px;border-radius:16px;font-size:.85rem;font-weight:600;margin-top:14px;background:var(--g900);color:#fff;box-shadow:var(--shadow-m)}
+    .alert svg{width:18px;height:18px;margin-top:2px}
+    .panel{display:none;margin-top:14px}
+    .panel.show{display:block;animation:pin .3s ease}
+    @keyframes pin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .card{background:var(--white);border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:var(--shadow-m)}
+    .card+.card,.card+.sec{margin-top:14px}
+    .card-head{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+    .ic-box{width:44px;height:44px;border-radius:14px;background:var(--g100);color:var(--g700);display:grid;place-items:center;flex-shrink:0}
+    .ic-box svg{width:23px;height:23px}
+    .card h3,.sec h3{font-size:1.08rem;letter-spacing:-.01em;line-height:1.3;color:var(--g900);font-weight:800}
+    .sub{color:var(--muted);font-size:.8rem;margin-top:1px}
+    label{display:block;font-size:.8rem;font-weight:700;margin-bottom:6px;color:var(--g800)}
+    .field{position:relative}
+    .field svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--g500);width:20px;height:20px;pointer-events:none}
+    input[type=text]{width:100%;background:var(--g50);border:1.5px solid var(--line);border-radius:16px;padding:14px 14px;font:600 .96rem var(--font);color:var(--ink);outline:none;transition:.2s}
+    .field input{padding-left:44px}
+    input[type=text]::placeholder{color:#9bb8a8;font-weight:500}
+    input[type=text]:focus{border-color:var(--g500);box-shadow:0 0 0 4px rgba(34,176,90,.16);background:#fff}
+    #voucherCode{text-transform:uppercase;font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.16em;font-weight:700;font-size:1.02rem}
+    #voucherCode::placeholder{letter-spacing:.1em}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:0;border-radius:16px;padding:14px 20px;font:800 .95rem var(--font);cursor:pointer;text-decoration:none;transition:transform .15s,box-shadow .2s,filter .2s;background:linear-gradient(145deg,var(--g500),var(--g700));color:#fff;box-shadow:0 14px 24px -12px rgba(18,130,61,.85), inset 0 1px 0 rgba(255,255,255,.28);white-space:nowrap}
+    .btn:hover:not(:disabled){filter:brightness(1.05)}
+    .btn:active:not(:disabled){transform:scale(.98)}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .btn svg{width:19px;height:19px}
+    .btn-block{width:100%}
+    .btn-success{background:linear-gradient(145deg,var(--g500),var(--g700))}
+    .btn-secondary{background:var(--g100);color:var(--g800);box-shadow:none;border:1px solid var(--g200)}
+    .spinner{width:17px;height:17px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .mini-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+    .mini-steps div{background:var(--g50);border:1px solid var(--line);border-radius:16px;padding:10px 8px;text-align:center;font-size:.72rem;font-weight:600;color:var(--g800);line-height:1.35}
+    .mini-steps i{display:grid;place-items:center;width:26px;height:26px;margin:0 auto 6px;border-radius:50%;background:var(--g600);color:#fff;font:800 .76rem var(--font);font-style:normal}
+
+    /* ---------- packages ---------- */
+    .pkg-grid{display:grid;gap:12px}
+    .pkg{position:relative;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding:14px 14px 14px 14px;border:1.5px solid var(--line);border-radius:22px;background:var(--white);transition:transform .2s,box-shadow .2s,border-color .2s;box-shadow:var(--shadow-s)}
+    .pkg:hover{border-color:var(--g400);transform:translateY(-2px);box-shadow:var(--shadow-m)}
+    .pkg-badge{width:62px;height:62px;border-radius:19px;background:var(--g100);color:var(--g800);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+    .pkg-badge b{font-size:1.5rem;font-weight:800;letter-spacing:-.02em}
+    .pkg-badge span{font-size:.68rem;font-weight:700;margin-top:3px;color:var(--g700)}
+    .pkg-name{font-weight:800;font-size:1.02rem;color:var(--g900)}
+    .pkg-meta{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:.74rem;margin-top:3px}
+    .pkg-meta svg{width:14px;height:14px;color:var(--g500)}
+    .pkg-buy{display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+    .pkg-price{font-size:1.45rem;font-weight:800;color:var(--g700);letter-spacing:-.02em;line-height:1}
+    .pkg .btn{padding:9px 18px;font-size:.82rem;border-radius:13px}
+    .pkg.pop{background:linear-gradient(150deg,var(--g600),var(--g800));border-color:transparent;box-shadow:var(--shadow-l)}
+    .pkg.pop .pkg-name,.pkg.pop .pkg-price{color:#fff}
+    .pkg.pop .pkg-meta,.pkg.pop .pkg-meta svg{color:rgba(255,255,255,.82)}
+    .pkg.pop .pkg-badge{background:rgba(255,255,255,.18);color:#fff}
+    .pkg.pop .pkg-badge span{color:rgba(255,255,255,.88)}
+    .pkg.pop .btn{background:#fff;color:var(--g800);box-shadow:0 10px 18px -10px rgba(0,0,0,.4)}
+    .pkg .tag{position:absolute;top:-10px;left:18px;background:#fff;color:var(--g700);border:1px solid var(--g200);font-size:.68rem;font-weight:800;padding:2px 11px;border-radius:99px;box-shadow:var(--shadow-s)}
+    .pays{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;align-items:center}
+    .pays small{color:var(--muted);font-size:.74rem;font-weight:600}
+    .pay-badge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--g200);background:var(--g50);border-radius:99px;padding:4px 11px;font-size:.75rem;font-weight:700;color:var(--g800)}
+    .pay-badge i{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--g500)}
+    .pay-badge:nth-of-type(2) i{background:var(--g600)}.pay-badge:nth-of-type(3) i{background:var(--g800)}
+    .sec{background:var(--white);border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:var(--shadow-m);margin-top:14px}
+    .feat{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .feat div{background:var(--g50);border:1px solid var(--line);border-radius:18px;padding:12px}
+    .feat .ic-box{width:36px;height:36px;border-radius:12px;background:#fff;margin-bottom:8px;box-shadow:var(--shadow-s)}
+    .feat .ic-box svg{width:19px;height:19px}
+    .feat b{display:block;font-size:.84rem;color:var(--g900)}
+    .feat span{font-size:.72rem;color:var(--muted);display:block;line-height:1.4;margin-top:1px}
+    .steps{display:grid;gap:0;margin-top:12px;position:relative}
+    .step{display:flex;gap:12px;align-items:flex-start;font-size:.84rem;padding-bottom:14px;position:relative}
+    .step:last-child{padding-bottom:0}
+    .step:not(:last-child)::before{content:"";position:absolute;left:13px;top:28px;bottom:2px;width:2px;background:var(--g200)}
+    .step i{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(--g600);color:#fff;font:800 .78rem var(--font);display:grid;place-items:center;font-style:normal;box-shadow:0 0 0 4px var(--g100)}
+    .step span{padding-top:3px}
+
+    /* ---------- status tab ---------- */
+    .stat-top{display:flex;align-items:center;gap:14px;background:linear-gradient(150deg,var(--g50),#fff);border:1px solid var(--g200);border-radius:20px;padding:14px}
+    .stat-orb{width:52px;height:52px;border-radius:50%;background:var(--g100);color:var(--g700);display:grid;place-items:center;flex-shrink:0;position:relative}
+    .stat-orb::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--g300);opacity:.6}
+    .stat-orb.on{background:var(--g600);color:#fff}
+    .stat-orb.on::after{animation:ring 2.4s ease-out infinite}
+    @keyframes ring{from{transform:scale(.85);opacity:.9}to{transform:scale(1.5);opacity:0}}
+    .stat-orb svg{width:26px;height:26px}
+    .stat-top b{display:block;font-size:1.02rem;color:var(--g900)}
+    .stat-top span{font-size:.78rem;color:var(--muted)}
+    .kv{margin-top:12px;border:1px solid var(--line);border-radius:18px;padding:2px 14px;background:#fff}
+    .kv div{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;font-size:.84rem}
+    .kv div+div{border-top:1px solid var(--line)}
+    .kv span{color:var(--muted)}
+    .kv b{color:var(--g900);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;word-break:break-all;text-align:right}
+
+    /* ---------- FAQ ---------- */
+    details{border-top:1px solid var(--line);padding:11px 0}
+    details:first-of-type{border-top:0}
+    summary{cursor:pointer;font-weight:700;font-size:.88rem;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--g900)}
+    summary::-webkit-details-marker{display:none}
+    summary::after{content:"+";width:24px;height:24px;border-radius:50%;background:var(--g100);color:var(--g700);display:grid;place-items:center;font-weight:800;flex-shrink:0;transition:.2s}
+    details[open] summary::after{content:"–";background:var(--g600);color:#fff}
+    details p{font-size:.8rem;color:var(--muted);margin-top:7px}
+    .faq-h{margin-bottom:4px}
+
+    /* ---------- modal ---------- */
+    .modal{position:fixed;inset:0;background:rgba(10,61,34,.42);backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:50}
+    .modal.show{display:flex}
+    .sheet{background:#fff;width:100%;max-width:520px;border-radius:30px 30px 0 0;padding:10px 18px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto;animation:up .28s cubic-bezier(.3,.8,.3,1)}
+    .sheet::before{content:"";display:block;width:44px;height:5px;border-radius:9px;background:var(--g200);margin:0 auto 12px}
+    @keyframes up{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
+    .sheet h3{font-size:1.12rem;color:var(--g900);font-weight:800}
+    .sum{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(150deg,var(--g600),var(--g800));color:#fff;border-radius:18px;padding:14px 16px;margin:12px 0}
+    .sum .pkg-meta{color:rgba(255,255,255,.8)}
+    .sum .pkg-price{color:#fff}
+    .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
+    .tab{border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:10px 4px;font:700 .78rem var(--font);cursor:pointer;color:var(--muted);transition:.2s}
+    .tab.active{border-color:var(--g500);background:var(--g50);color:var(--g800);box-shadow:0 0 0 3px rgba(34,176,90,.14)}
+    .payto{border:1.5px dashed var(--g300);background:var(--g50);border-radius:16px;padding:11px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .payto small{display:block;color:var(--muted);font-size:.7rem}
+    .payto b{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92rem;word-break:break-all;color:var(--g900)}
+    .copy{border:0;background:var(--g600);color:#fff;border-radius:11px;padding:8px 14px;font:700 .75rem var(--font);cursor:pointer}
+    .close{float:right;border:0;background:var(--g100);color:var(--g800);width:34px;height:34px;border-radius:50%;font-size:1.2rem;cursor:pointer;margin-top:-2px}
+    .help{font-size:.76rem;color:var(--muted);margin:10px 0 14px}
+
+    /* ---------- state views (waiting / success / rejected) ---------- */
+    .view-container{animation:pin .35s ease}
+    #waitingView,#successView,#rejectedView{display:none;text-align:center;background:#fff;border:1px solid var(--line);border-radius:28px;padding:30px 20px;box-shadow:var(--shadow-l)}
+    #waitingView h1,#successView h1,#rejectedView h1{font-size:1.45rem;letter-spacing:-.02em;margin:12px 0 6px;color:var(--g900)}
+    .subtitle{color:var(--muted);font-size:.86rem}
+    .subtitle strong{color:var(--ink)}
+    .radar-beacon-container{position:relative;width:128px;height:128px;margin:0 auto 12px;display:grid;place-items:center}
+    .radar-wave{position:absolute;inset:0;border:2px solid var(--g400);border-radius:50%;animation:ring 3s ease-out infinite}
+    .radar-wave:nth-child(2){animation-delay:1s}.radar-wave:nth-child(3){animation-delay:2s}
+    .waiting-center-icon{width:60px;height:60px;border-radius:50%;background:var(--g100);color:var(--g700);display:grid;place-items:center;animation:spin 6s linear infinite}
+    .waiting-center-icon svg{width:30px;height:30px}
+    .success-icon-wrapper,.rejected-icon-wrapper{width:80px;height:80px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center}
+    .success-icon-wrapper{background:linear-gradient(145deg,var(--g500),var(--g700));color:#fff;box-shadow:0 0 0 10px rgba(34,176,90,.14), 0 0 0 22px rgba(34,176,90,.07)}
+    .rejected-icon-wrapper{background:var(--g100);color:var(--g800);box-shadow:0 0 0 10px rgba(143,220,174,.25)}
+    .success-icon-wrapper svg,.rejected-icon-wrapper svg{width:40px;height:40px}
+    [class^=status-badge]{display:inline-flex;align-items:center;gap:7px;padding:5px 14px;border-radius:99px;font-size:.76rem;font-weight:800;background:var(--g100);color:var(--g800)}
+    .pulse-dot-amber,.pulse-dot-green{width:8px;height:8px;border-radius:50%;display:inline-block;animation:pulse 1.4s infinite;background:var(--g500)}
+    @keyframes pulse{50%{opacity:.35;transform:scale(1.4)}}
+    .shimmer-track{height:6px;background:var(--g100);border-radius:99px;overflow:hidden;margin:16px 0}
+    .shimmer-indicator{height:100%;width:40%;background:linear-gradient(90deg,transparent,var(--g500),transparent);animation:slide 1.4s infinite}
+    @keyframes slide{from{transform:translateX(-100%)}to{transform:translateX(260%)}}
+    .info-card{background:var(--g50);border:1px solid var(--line);border-radius:18px;padding:4px 14px;margin:14px 0;text-align:left}
+    .info-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;font-size:.85rem}
+    .info-row+.info-row{border-top:1px solid var(--line)}
+    .info-title{color:var(--muted)}
+    .info-value-amber,.info-value-success{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--g800)}
+    .timer-pill{background:var(--g600);color:#fff;font:700 .85rem ui-monospace,Menlo,monospace;padding:3px 12px;border-radius:99px}
+    footer{text-align:center;color:var(--muted);font-size:.74rem;padding:20px 0 0}
+    footer b{color:var(--g700)}
+    @media (max-width:360px){.pkg{grid-template-columns:auto 1fr}.pkg-buy{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center}.tabbtn{font-size:.7rem}}
+    @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <div id="glowSphere" class="glow-sphere"></div>
+
+  <!-- shared icon sprite -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M3 9a2 2 0 0 0 0 6v3a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-3a2 2 0 0 1 0-6V6a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1z"/><path d="M14 5v2M14 11v2M14 17v2"/></symbol>
+      <symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 7h12l1 13H5z"/><path d="M9 7a3 3 0 0 1 6 0"/></symbol>
+      <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2.5-6 5 12 2.5-6H21"/></symbol>
+      <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3 10 14"/><path d="M21 3l-7 18-4-7-7-4z"/></symbol>
+      <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><path d="M12 20h.01"/></symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+      <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8"/><path d="M12 8c-2 0-4-1-4-3a2 2 0 0 1 4 0 2 2 0 0 1 4 0c0 2-2 3-4 3z"/></symbol>
+      <symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="container">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c2.5-4 5-4 7.5 0s5 4 7.5 0 3-2 5-1"/><path d="M2 18c2.5-4 5-4 7.5 0s5 4 7.5 0 3-2 5-1" opacity=".55"/><path d="M2 6c2.5-4 5-4 7.5 0s5 4 7.5 0 3-2 5-1" opacity=".55"/></svg>
+        </div>
+        <div><b>Cyber<span>wave</span></b><small id="networkName">Wi-Fi hotspot</small></div>
+      </div>
+      <div class="lang-toggle">
+        <button id="langEnBtn" class="lang-btn" onclick="setLanguage('en')">EN</button>
+        <button id="langBnBtn" class="lang-btn active" onclick="setLanguage('bn')">বাং</button>
+      </div>
+    </header>
+
+    <div id="mainCard">
+
+      <!-- VIEW 1: Home -->
+      <div id="requestView" class="view-container">
+
+        <section class="hero">
+          <svg class="hero-art" viewBox="0 0 480 324" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+            <defs>
+              <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".62" stop-color="#e4f8ec"/><stop offset="1" stop-color="#cdeedb"/></linearGradient>
+              <radialGradient id="sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#bdebd0" stop-opacity="0"/></radialGradient>
+              <linearGradient id="land" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4cc47c"/><stop offset="1" stop-color="#1f9a52"/></linearGradient>
+              <linearGradient id="river" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e9fbf1"/><stop offset="1" stop-color="#bdebd0"/></linearGradient>
+            </defs>
+            <rect width="480" height="324" fill="url(#sky)"/>
+            <circle cx="392" cy="112" r="96" fill="url(#sun)"/>
+            <circle cx="392" cy="112" r="34" fill="#fff"/>
+            <!-- clouds -->
+            <g fill="#fff"><ellipse cx="318" cy="64" rx="34" ry="11"/><ellipse cx="338" cy="55" rx="22" ry="13"/><ellipse cx="300" cy="58" rx="16" ry="9"/>
+              <ellipse cx="440" cy="40" rx="26" ry="8" opacity=".9"/><ellipse cx="452" cy="34" rx="15" ry="9" opacity=".9"/></g>
+            <!-- birds -->
+            <g fill="none" stroke="#12823d" stroke-width="1.6" stroke-linecap="round" opacity=".7"><path d="M262 122q5-6 10 0q5-6 10 0"/><path d="M288 108q4-5 8 0q4-5 8 0"/></g>
+            <!-- hills -->
+            <path d="M0 196 C60 150 120 160 180 184 C240 206 290 150 360 156 C410 160 450 178 480 170 L480 324 L0 324Z" fill="#c9efd9"/>
+            <path d="M0 214 C70 180 130 196 210 214 C290 232 340 186 420 190 C450 191 468 198 480 200 L480 324 L0 324Z" fill="#93dcb0"/>
+            <path d="M0 236 C80 214 150 232 240 240 C330 248 390 212 480 224 L480 324 L0 324Z" fill="#5bc886"/>
+            <path d="M0 262 C90 246 170 262 260 266 C350 270 420 250 480 258 L480 324 L0 324Z" fill="url(#land)"/>
+            <!-- river -->
+            <path d="M0 238 C50 232 100 244 150 254 C120 270 60 282 0 280Z" fill="url(#river)"/>
+            <g fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".9"><path d="M20 262q8-4 16 0"/><path d="M56 270q8-4 16 0"/><path d="M88 258q8-4 16 0"/></g>
+            <!-- boat -->
+            <path d="M64 252 h38 l-6 9 h-26z" fill="#0f5a31"/><path d="M82 226 v24 M82 228 L100 248 H82z" stroke="#0f5a31" stroke-width="1.5" fill="#fff"/>
+            <!-- hut -->
+            <g transform="translate(180 202)">
+              <rect x="6" y="22" width="62" height="38" rx="3" fill="#effcf4"/>
+              <path d="M-4 24 L37 -6 L78 24Z" fill="#12823d"/><path d="M-4 24 L37 -6 L78 24" fill="none" stroke="#0f5a31" stroke-width="2" stroke-linejoin="round"/>
+              <rect x="30" y="34" width="16" height="26" rx="2" fill="#0f5a31"/>
+              <rect x="12" y="32" width="12" height="10" rx="2" fill="#bdebd0"/><rect x="52" y="32" width="12" height="10" rx="2" fill="#bdebd0"/>
+              <rect x="-10" y="58" width="94" height="5" rx="2.5" fill="#0f5a31" opacity=".35"/>
+            </g>
+            <!-- wifi tower -->
+            <g transform="translate(330 150)">
+              <rect x="-2.5" y="30" width="5" height="108" rx="2.5" fill="#0f5a31"/>
+              <rect x="-15" y="12" width="30" height="20" rx="6" fill="#0f5a31"/><circle cx="-5" cy="22" r="2.6" fill="#8fdcae"/><circle cx="5" cy="22" r="2.6" fill="#8fdcae"/>
+              <g fill="none" stroke="#16a34a" stroke-width="3.2" stroke-linecap="round">
+                <path class="arc a1" d="M-14 -2 Q0 -12 14 -2"/>
+                <path class="arc a2" d="M-26 -12 Q0 -32 26 -12"/>
+                <path class="arc a3" d="M-38 -22 Q0 -52 38 -22"/>
+              </g>
+            </g>
+            <!-- grass tufts -->
+            <g fill="none" stroke="#12823d" stroke-width="2" stroke-linecap="round" opacity=".55"><path d="M250 292l-3-9M254 292l1-11M258 292l4-8"/><path d="M400 300l-3-9M404 300l1-11M408 300l4-8"/><path d="M130 304l-3-9M134 304l1-11"/></g>
+            <!-- palms -->
+            <g>
+              <path d="M30 324 C36 270 30 220 40 172" stroke="#0f5a31" stroke-width="7" fill="none" stroke-linecap="round"/>
+              <g fill="#12823d"><path d="M40 172 C24 150 -2 154 -14 170 C6 160 26 162 40 172Z"/><path d="M40 172 C40 148 58 134 82 138 C62 142 50 154 40 172Z"/><path d="M40 172 C58 160 84 170 92 188 C74 172 56 170 40 172Z"/><path d="M40 172 C22 168 6 182 6 198 C14 184 28 176 40 172Z"/></g>
+              <g fill="#16a34a"><path d="M40 172 C34 150 16 138 -6 142 C16 144 30 156 40 172Z"/></g>
+            </g>
+            <g>
+              <path d="M452 324 C448 286 456 250 448 214" stroke="#0f5a31" stroke-width="6" fill="none" stroke-linecap="round"/>
+              <g fill="#12823d"><path d="M448 214 C468 196 492 202 500 218 C480 208 462 208 448 214Z"/><path d="M448 214 C446 192 428 182 406 188 C426 190 438 200 448 214Z"/><path d="M448 214 C430 206 410 216 406 232 C418 220 432 214 448 214Z"/></g>
+              <g fill="#16a34a"><path d="M448 214 C456 196 474 190 492 196 C474 198 460 204 448 214Z"/></g>
+            </g>
+          </svg>
+          <div class="hero-text">
+            <h2 id="titleText" data-en="Fast internet for every home in the village" data-bn="গ্রামের প্রতিটি ঘরে দ্রুতগতির ইন্টারনেট">গ্রামের প্রতিটি ঘরে দ্রুতগতির ইন্টারনেট</h2>
+            <p id="subtitleText"><svg class="i"><use href="#i-bolt"/></svg><span data-en="Easy vouchers &amp; UPI payment" data-bn="সহজ ভাউচার ও UPI পেমেন্ট">সহজ ভাউচার ও UPI পেমেন্ট</span></p>
+          </div>
+        </section>
+
+        <nav class="tabbar" id="tabbar" role="tablist" style="--i:0">
+          <span class="ind"></span>
+          <button class="tabbtn active" role="tab" data-tab="voucher" type="button"><svg class="i"><use href="#i-ticket"/></svg><span data-en="Voucher" data-bn="ভাউচার">ভাউচার</span></button>
+          <button class="tabbtn" role="tab" data-tab="buy" type="button"><svg class="i"><use href="#i-bag"/></svg><span data-en="Buy" data-bn="কিনুন">কিনুন</span></button>
+          <button class="tabbtn" role="tab" data-tab="status" type="button"><svg class="i"><use href="#i-pulse"/></svg><span data-en="Status" data-bn="স্ট্যাটাস">স্ট্যাটাস</span></button>
+          <button class="tabbtn" role="tab" data-tab="request" type="button"><svg class="i"><use href="#i-send"/></svg><span data-en="Request" data-bn="অনুরোধ">অনুরোধ</span></button>
+        </nav>
+
+        <div class="notice">
+          <div class="nic"><svg class="i"><use href="#i-info"/></svg></div>
+          <div data-en="<b>Notice:</b> If Private/Random Wi-Fi Address is on for this network, turn it off in Wi-Fi settings and try again." data-bn="<b>সতর্কতা:</b> ফোনে Private/Random Wi-Fi Address চালু থাকলে সংযোগে সমস্যা হতে পারে। Wi-Fi সেটিংসে এই নেটওয়ার্কের “Private Address” বন্ধ করে আবার চেষ্টা করুন।"><b>সতর্কতা:</b> ফোনে Private/Random Wi-Fi Address চালু থাকলে সংযোগে সমস্যা হতে পারে। Wi-Fi সেটিংসে এই নেটওয়ার্কের “Private Address” বন্ধ করে আবার চেষ্টা করুন।</div>
+        </div>
+
+        <div id="errorAlert" class="alert alert-error" role="alert"></div>
+
+        <!-- PANEL: Voucher -->
+        <section class="panel show" id="panel-voucher">
+          <div class="card">
+            <div class="card-head">
+              <div class="ic-box"><svg class="i"><use href="#i-ticket"/></svg></div>
+              <div>
+                <h3 data-en="Enter voucher code" data-bn="ভাউচার কোড দিন">ভাউচার কোড দিন</h3>
+                <div class="sub" data-en="Enter the code and get online right away" data-bn="কোড দিয়ে সঙ্গে সঙ্গে ইন্টারনেট চালু করুন">কোড দিয়ে সঙ্গে সঙ্গে ইন্টারনেট চালু করুন</div>
+              </div>
+            </div>
+            <div class="field">
+              <svg class="i"><use href="#i-ticket"/></svg>
+              <input type="text" id="voucherCode" placeholder="PASS-XXXX" autocomplete="off" autocapitalize="characters" aria-label="Voucher code" />
+            </div>
+            <button type="button" id="redeemVoucherBtn" class="btn btn-success btn-block" style="margin-top:12px">
+              <span id="btnRedeemText">সংযোগ করুন</span>
+              <svg class="i" id="redeemArrow"><use href="#i-arrow"/></svg>
+              <div id="voucherSpinner" class="spinner" style="display:none"></div>
+            </button>
+            <div class="mini-steps">
+              <div><i>১</i><span data-en="Get a voucher" data-bn="ভাউচার সংগ্রহ করুন">ভাউচার সংগ্রহ করুন</span></div>
+              <div><i>২</i><span data-en="Type the code" data-bn="কোডটি লিখুন">কোডটি লিখুন</span></div>
+              <div><i>৩</i><span data-en="Connect" data-bn="সংযোগ করুন">সংযোগ করুন</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PANEL: Buy -->
+        <section class="panel" id="panel-buy">
+          <div class="card">
+            <div class="card-head">
+              <div class="ic-box"><svg class="i"><use href="#i-bag"/></svg></div>
+              <div>
+                <h3 data-en="Internet packages" data-bn="ইন্টারনেট প্যাকেজ">ইন্টারনেট প্যাকেজ</h3>
+                <div class="sub" data-en="Pick the plan that suits you" data-bn="আপনার পছন্দের প্যাকেজটি বেছে নিন">আপনার পছন্দের প্যাকেজটি বেছে নিন</div>
+              </div>
+            </div>
+            <div class="pkg-grid" id="pkgGrid"></div>
+            <div class="pays">
+              <small data-en="Pay with" data-bn="পেমেন্ট করুন">পেমেন্ট করুন</small>
+              <span class="pay-badge"><i></i>PhonePe</span>
+              <span class="pay-badge"><i></i>Google Pay</span>
+              <span class="pay-badge"><i></i>Paytm</span>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3 data-en="Why Cyberwave" data-bn="কেন Cyberwave">কেন Cyberwave</h3>
+            <div class="feat">
+              <div><div class="ic-box"><svg class="i"><use href="#i-bolt"/></svg></div><b data-en="Instant activation" data-bn="তাৎক্ষণিক চালু">তাৎক্ষণিক চালু</b><span data-en="Voucher works in seconds" data-bn="ভাউচার দিলেই সাথে সাথে সচল">ভাউচার দিলেই সাথে সাথে সচল</span></div>
+              <div><div class="ic-box"><svg class="i"><use href="#i-gift"/></svg></div><b data-en="Gift vouchers" data-bn="গিফট ভাউচার">গিফট ভাউচার</b><span data-en="Share access with family" data-bn="পরিবার ও বন্ধুদের উপহার দিন">পরিবার ও বন্ধুদের উপহার দিন</span></div>
+              <div><div class="ic-box"><svg class="i"><use href="#i-card"/></svg></div><b data-en="Easy payment" data-bn="সহজ পেমেন্ট">সহজ পেমেন্ট</b><span data-en="PhonePe, Google Pay, Paytm" data-bn="ফোনপে, গুগল পে, পেটিএম">ফোনপে, গুগল পে, পেটিএম</span></div>
+              <div><div class="ic-box"><svg class="i"><use href="#i-shield"/></svg></div><b data-en="Safe browsing" data-bn="নিরাপদ ব্রাউজিং">নিরাপদ ব্রাউজিং</b><span data-en="Protected connection" data-bn="সুরক্ষিত সংযোগ">সুরক্ষিত সংযোগ</span></div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3 data-en="How it works" data-bn="কীভাবে কাজ করে">কীভাবে কাজ করে</h3>
+            <div class="steps">
+              <div class="step"><i>১</i><span data-en="Choose a package and tap Buy." data-bn="একটি প্যাকেজ বেছে “কিনুন” চাপুন।">একটি প্যাকেজ বেছে “কিনুন” চাপুন।</span></div>
+              <div class="step"><i>২</i><span data-en="Pay via PhonePe / Google Pay / Paytm and enter the Transaction ID." data-bn="ফোনপে / গুগল পে / পেটিএমে পেমেন্ট করে Transaction ID দিন।">ফোনপে / গুগল পে / পেটিএমে পেমেন্ট করে Transaction ID দিন।</span></div>
+              <div class="step"><i>৩</i><span data-en="Admin verifies and your internet starts automatically." data-bn="অ্যাডমিন যাচাই করলেই ইন্টারনেট স্বয়ংক্রিয়ভাবে চালু হবে।">অ্যাডমিন যাচাই করলেই ইন্টারনেট স্বয়ংক্রিয়ভাবে চালু হবে।</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PANEL: Status -->
+        <section class="panel" id="panel-status">
+          <div class="card">
+            <div class="card-head">
+              <div class="ic-box"><svg class="i"><use href="#i-pulse"/></svg></div>
+              <div>
+                <h3 data-en="Connection status" data-bn="সংযোগের অবস্থা">সংযোগের অবস্থা</h3>
+                <div class="sub" data-en="See the status of this device" data-bn="এই ডিভাইসের বর্তমান অবস্থা দেখুন">এই ডিভাইসের বর্তমান অবস্থা দেখুন</div>
+              </div>
+            </div>
+            <div class="stat-top">
+              <div class="stat-orb" id="statOrb"><svg class="i"><use href="#i-wifi"/></svg></div>
+              <div><b id="statTitle" data-en="Not checked yet" data-bn="এখনো দেখা হয়নি">এখনো দেখা হয়নি</b><span id="statSub" data-en="Tap the button below to check." data-bn="নিচের বোতামে চাপ দিয়ে দেখুন।">নিচের বোতামে চাপ দিয়ে দেখুন।</span></div>
+            </div>
+            <div class="kv">
+              <div><span data-en="Device ID" data-bn="ডিভাইস আইডি">ডিভাইস আইডি</span><b id="statMac">—</b></div>
+              <div><span data-en="Name" data-bn="নাম">নাম</span><b id="statName" style="font-family:var(--font)">—</b></div>
+              <div><span data-en="Plan" data-bn="মেয়াদ">মেয়াদ</span><b id="statDur" style="font-family:var(--font)">—</b></div>
+            </div>
+            <button type="button" id="statBtn" class="btn btn-secondary btn-block" style="margin-top:12px">
+              <svg class="i"><use href="#i-refresh"/></svg><span id="statBtnText" data-en="Check status" data-bn="স্ট্যাটাস দেখুন">স্ট্যাটাস দেখুন</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- PANEL: Request -->
+        <section class="panel" id="panel-request">
+          <div class="card">
+            <div class="card-head">
+              <div class="ic-box"><svg class="i"><use href="#i-send"/></svg></div>
+              <div>
+                <h3 data-en="Request access from admin" data-bn="অ্যাডমিনের কাছে অনুরোধ পাঠান">অ্যাডমিনের কাছে অনুরোধ পাঠান</h3>
+                <div class="sub" id="reqHelp" data-en="Enter your name to request approval from the network administrator." data-bn="নেটওয়ার্ক অ্যাডমিনের অনুমোদন চাইতে আপনার নাম লিখুন।">নেটওয়ার্ক অ্যাডমিনের অনুমোদন চাইতে আপনার নাম লিখুন।</div>
+              </div>
+            </div>
+            <form id="accessForm">
+              <label id="labelName" for="userName">আপনার পূর্ণ নাম</label>
+              <div class="field">
+                <svg class="i"><use href="#i-user"/></svg>
+                <input type="text" id="userName" name="name" required autocomplete="name" maxlength="64" />
+              </div>
+              <input type="hidden" id="clientMac" name="mac" />
+              <button type="submit" id="submitBtn" class="btn btn-block" style="margin-top:12px">
+                <span id="btnText">ইন্টারনেট অ্যাক্সেসের অনুরোধ করুন</span>
+                <div id="btnSpinner" class="spinner" style="display:none"></div>
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- FAQ -->
+        <section class="sec">
+          <h3 class="faq-h" data-en="FAQ" data-bn="সাধারণ জিজ্ঞাসা">সাধারণ জিজ্ঞাসা</h3>
+          <details><summary><span data-en="How long does activation take?" data-bn="চালু হতে কতক্ষণ লাগে?">চালু হতে কতক্ষণ লাগে?</span></summary><p data-en="Voucher codes work instantly. Paid orders start right after admin verification." data-bn="ভাউচার কোড দিলে সাথে সাথে চালু হয়। পেমেন্টের ক্ষেত্রে অ্যাডমিন যাচাইয়ের পরই চালু হয়।">ভাউচার কোড দিলে সাথে সাথে চালু হয়। পেমেন্টের ক্ষেত্রে অ্যাডমিন যাচাইয়ের পরই চালু হয়।</p></details>
+          <details><summary><span data-en="Can I use one voucher on two devices?" data-bn="একটি ভাউচার কি দুইটি ডিভাইসে চলবে?">একটি ভাউচার কি দুইটি ডিভাইসে চলবে?</span></summary><p data-en="No. Each voucher is valid for one device only." data-bn="না, প্রতিটি ভাউচার শুধু একটি ডিভাইসের জন্য প্রযোজ্য।">না, প্রতিটি ভাউচার শুধু একটি ডিভাইসের জন্য প্রযোজ্য।</p></details>
+          <details><summary><span data-en="My voucher is not working" data-bn="ভাউচার কাজ করছে না">ভাউচার কাজ করছে না</span></summary><p data-en="Check the code for typos, make sure it was not used before, and turn off Private Wi-Fi Address." data-bn="কোডটি ঠিকভাবে লিখেছেন কিনা দেখুন, আগে ব্যবহার হয়নি তো নিশ্চিত হোন এবং Private Wi-Fi Address বন্ধ করুন।">কোডটি ঠিকভাবে লিখেছেন কিনা দেখুন, আগে ব্যবহার হয়নি তো নিশ্চিত হোন এবং Private Wi-Fi Address বন্ধ করুন।</p></details>
+        </section>
+      </div>
+
+      <!-- VIEW 2: Waiting -->
+      <div id="waitingView" class="view-container waiting-view">
+        <div class="radar-beacon-container">
+          <div class="radar-wave"></div><div class="radar-wave"></div><div class="radar-wave"></div>
+          <div class="waiting-center-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></div>
+        </div>
+        <div class="status-badge-waiting"><span class="pulse-dot-amber"></span><span id="waitingBadgeText">অ্যাডমিনের অনুমোদনের অপেক্ষায়</span></div>
+        <h1 id="waitingTitleText">অনুরোধ বিবেচনাধীন...</h1>
+        <p class="subtitle"><span id="waitingSubPrefix">ধন্যবাদ,</span> <strong id="waitingName"></strong>। <span id="waitingSubSuffix">আপনার অনুরোধটি অ্যাডমিনের অনুমোদনের জন্য পাঠানো হয়েছে।</span></p>
+        <div class="shimmer-track"><div class="shimmer-indicator"></div></div>
+        <div class="info-card">
+          <div class="info-row"><span class="info-title" id="waitingStatusLabel">সংযোগের অবস্থা:</span>
+            <span class="info-value-amber" id="waitingStatusVal"><span class="pulse-dot-amber"></span><span id="waitingStatusText">বিবেচনাধীন</span></span></div>
+          <div class="info-row"><span class="info-title" id="waitingTimerLabel">অপেক্ষার সময়:</span><span class="timer-pill" id="waitingTimerVal">০০:০০</span></div>
+        </div>
+        <p id="waitingTipText" class="subtitle" style="font-size:.8rem">অ্যাডমিন অনুমোদন দিলে আপনার ইন্টারনেট স্বয়ংক্রিয়ভাবে সক্রিয় হবে। অনুগ্রহ করে এই পেজটি খোলা রাখুন।</p>
+      </div>
+
+      <!-- VIEW 3: Success -->
+      <div id="successView" class="view-container success-view">
+        <div class="success-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <div class="status-badge-success"><span class="pulse-dot-green"></span><span id="successBadgeText">এক্সেস অনুমোদিত</span></div>
+        <h1 id="successTitleText">ইন্টারনেট সংযোগ সক্রিয়!</h1>
+        <p class="subtitle"><span id="successSubPrefix">অভিনন্দন,</span> <strong id="successName"></strong>! <span id="successSubSuffix">আপনার ইন্টারনেট অ্যাক্সেস সফলভাবে অনুমোদিত হয়েছে।</span></p>
+        <div class="info-card">
+          <div class="info-row"><span class="info-title" id="successStatusLabel">সংযোগের অবস্থা:</span><span class="info-value-success"><span class="pulse-dot-green"></span><span id="successStatusVal">অনলাইন ও প্রস্তুত</span></span></div>
+          <div class="info-row"><span class="info-title" id="successDurationLabel">মেয়াদ:</span><b id="successDurationVal">আনলিমিটেড</b></div>
+        </div>
+        <a href="https://www.google.com" target="_blank" id="btnStartBrowsing" class="btn btn-success btn-block">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span id="btnBrowseText">ইন্টারনেট ব্যবহার শুরু করুন</span>
+        </a>
+        <p id="successTipText" class="subtitle" style="font-size:.8rem;margin-top:14px">আপনার ডিভাইস এখন যেকোনো ওয়েবসাইট বা অ্যাপ ব্যবহারে সক্ষম।</p>
+      </div>
+
+      <!-- VIEW 4: Rejected -->
+      <div id="rejectedView" class="view-container rejected-view">
+        <div class="rejected-icon-wrapper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+        <div class="status-badge-rejected"><span id="rejectedBadgeText">অনুরোধ বাতিল করা হয়েছে</span></div>
+        <h1 id="rejectedTitleText">অনুমোদন সম্পন্ন হয়নি</h1>
+        <p id="rejectedSubText" class="subtitle" style="margin-bottom:18px">নেটওয়ার্ক অ্যাডমিন আপনার অনুরোধটি বাতিল করেছেন। প্রয়োজনে অ্যাডমিনের সাথে যোগাযোগ করুন।</p>
+        <button type="button" class="btn btn-secondary btn-block" onclick="resetToRequestView()"><span id="btnTryAgainText">আবার চেষ্টা করুন</span></button>
+      </div>
+    </div>
+
+    <footer id="portal-footer">
+      © 2026 · <b id="footerBrandName">CyberWave</b> Wi-Fi
+      <div id="footerSupportRow" style="margin-top:4px;display:none">Helpline: <a href="tel:" id="footerPhoneLink" style="color:var(--g700);font-weight:700;text-decoration:none"></a></div>
+      <div style="margin-top:4px">DESIGN BY <b>SAMIM MANDAL</b></div>
+    </footer>
+  </div>
+
+  <!-- Payment sheet -->
+  <div id="payModal" class="modal" onclick="if(event.target===this)closePay()">
+    <div class="sheet">
+      <button class="close" onclick="closePay()" aria-label="close">×</button>
+      <h3 data-en="Complete payment" data-bn="পেমেন্ট সম্পন্ন করুন">পেমেন্ট সম্পন্ন করুন</h3>
+      <div class="sum"><div><b id="paySumName"></b><div class="pkg-meta" id="paySumMeta"></div></div><div class="pkg-price" id="paySumPrice"></div></div>
+      <div class="tabs" id="payTabs"></div>
+      <div class="payto">
+        <div><small id="payToLabel">UPI ID</small><b id="payToValue"></b></div>
+        <div style="display:flex;gap:6px">
+          <a id="payAppBtn" href="#" class="copy" style="text-decoration:none;display:inline-flex;align-items:center;background:var(--g700)">Open App</a>
+          <button class="copy" id="payCopyBtn" type="button">Copy</button>
+        </div>
+      </div>
+      <label for="payName" data-en="Your name" data-bn="আপনার নাম">আপনার নাম</label>
+      <input type="text" id="payName" maxlength="20" style="margin-bottom:12px" />
+      <label for="payTrx" data-en="Transaction ID / UTR" data-bn="ট্রানজেকশন আইডি / UTR">ট্রানজেকশন আইডি / UTR</label>
+      <input type="text" id="payTrx" maxlength="24" autocomplete="off" />
+      <div class="help" data-en="Send the exact amount, then enter the Transaction ID. Admin will verify and activate your internet." data-bn="সঠিক টাকা পাঠিয়ে Transaction ID লিখুন। অ্যাডমিন যাচাই করে আপনার ইন্টারনেট চালু করে দেবেন।">সঠিক টাকা পাঠিয়ে Transaction ID লিখুন। অ্যাডমিন যাচাই করে আপনার ইন্টারনেট চালু করে দেবেন।</div>
+      <button class="btn btn-block" id="paySubmitBtn" type="button"><span data-en="Submit payment" data-bn="পেমেন্ট জমা দিন">পেমেন্ট জমা দিন</span></button>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------------------------------------------------------
+    // Multilingual Translations (English & Bangla)
+    // -------------------------------------------------------------------------
+    const translations = {
+      en: {
+        networkName: "Wi-Fi hotspot",
+        title: "Internet Access Request",
+        subtitle: "Please provide your name to request internet access from the network administrator.",
+        labelName: "Full Name",
+        placeholderName: "",
+        btnSubmit: "Request Internet Access",
+        btnSubmitting: "Sending Request...",
+
+        // Waiting View
+        waitingBadge: "Awaiting Admin Approval",
+        waitingTitle: "Request Under Review...",
+        waitingSubPrefix: "Thank you,",
+        waitingSubSuffix: "Your request has been forwarded to the network administrator.",
+        waitingStatusLabel: "Connection Status:",
+        waitingStatusVal: "Pending Review",
+        waitingTimerLabel: "Waiting time:",
+        waitingTip: "Once the administrator approves your session, internet will activate automatically. Please keep this page open.",
+
+        // Success View
+        successBadge: "Access Granted",
+        successTitle: "You're Connected!",
+        successSubPrefix: "Congratulations,",
+        successSubSuffix: "Your internet access has been successfully approved.",
+        successStatusLabel: "Connection Status:",
+        successStatusVal: "Online & Ready",
+        successDurationLabel: "Duration:",
+        durationUnlimited: "Unlimited",
+        durationMinutes: "{n} Minutes",
+        durationHour: "1 Hour",
+        btnBrowse: "Start Browsing Internet",
+        successTip: "Your device is now fully connected to the network and ready to browse.",
+
+        // Rejected View
+        rejectedBadge: "Request Not Approved",
+        rejectedTitle: "Access Declined",
+        rejectedSub: "The network administrator did not approve your access request. Please contact the administrator if needed.",
+        btnTryAgain: "Try Again",
+
+        // Errors
+        errorName: "Please enter your full name.",
+        errorDefault: "Failed to submit access request. Please try again.",
+
+        // Voucher
+        dividerOr: "OR",
+        btnVoucherToggle: "🎟️ Login with Guest Voucher",
+        voucherLabel: "Guest Voucher Code",
+        voucherPlaceholder: "PASS-XXXX",
+        btnRedeem: "Connect",
+        btnRedeeming: "Verifying...",
+        errorVoucherEmpty: "Please enter your voucher code."
+      },
+      bn: {
+        networkName: "Wi-Fi hotspot",
+        title: "ইন্টারনেট সংযোগের জন্য অনুরোধ",
+        subtitle: "ইন্টারনেট অ্যাক্সেস পেতে আপনার নাম লিখে নেটওয়ার্ক অ্যাডমিনের কাছে অনুমোদনের অনুরোধ পাঠান।",
+        labelName: "আপনার পূর্ণ নাম",
+        placeholderName: "",
+        btnSubmit: "ইন্টারনেট অ্যাক্সেসের অনুরোধ করুন",
+        btnSubmitting: "অনুরোধ পাঠানো হচ্ছে...",
+
+        // Waiting View
+        waitingBadge: "অ্যাডমিনের অনুমোদনের অপেক্ষায়",
+        waitingTitle: "অনুরোধ বিবেচনাধীন...",
+        waitingSubPrefix: "ধন্যবাদ,",
+        waitingSubSuffix: "আপনার অনুরোধটি অ্যাডমিনের অনুমোদনের জন্য পাঠানো হয়েছে।",
+        waitingStatusLabel: "সংযোগের অবস্থা:",
+        waitingStatusVal: "বিবেচনাধীন",
+        waitingTimerLabel: "অপেক্ষার সময়:",
+        waitingTip: "অ্যাডমিন অনুমোদন দিলে আপনার ইন্টারনেট স্বয়ংক্রিয়ভাবে সক্রিয় হবে। অনুগ্রহ করে এই পেজটি খোলা রাখুন।",
+
+        // Success View
+        successBadge: "এক্সেস অনুমোদিত",
+        successTitle: "ইন্টারনেট সংযোগ সক্রিয়!",
+        successSubPrefix: "অভিনন্দন,",
+        successSubSuffix: "আপনার ইন্টারনেট অ্যাক্সেস সফলভাবে অনুমোদিত হয়েছে।",
+        successStatusLabel: "সংযোগের অবস্থা:",
+        successStatusVal: "অনলাইন ও প্রস্তুত",
+        successDurationLabel: "মেয়াদ:",
+        durationUnlimited: "আনলিমিটেড",
+        durationMinutes: "{n} মিনিট",
+        durationHour: "১ ঘণ্টা",
+        btnBrowse: "ইন্টারনেট ব্যবহার শুরু করুন",
+        successTip: "আপনার ডিভাইস এখন যেকোনো ওয়েবসাইট বা অ্যাপ ব্যবহারে সক্ষম।",
+
+        // Rejected View
+        rejectedBadge: "অনুরোধ বাতিল করা হয়েছে",
+        rejectedTitle: "অনুমোদন সম্পন্ন হয়নি",
+        rejectedSub: "নেটওয়ার্ক অ্যাডমিন আপনার অনুরোধটি বাতিল করেছেন। প্রয়োজনে অ্যাডমিনের সাথে যোগাযোগ করুন।",
+        btnTryAgain: "আবার চেষ্টা করুন",
+
+        // Errors
+        errorName: "অনুগ্রহ করে আপনার পুরো নাম লিখুন।",
+        errorDefault: "অনুরোধ পাঠানো সম্ভব হয়নি। পুনরায় চেষ্টা করুন।",
+
+        // Voucher
+        dividerOr: "অথবা",
+        btnVoucherToggle: "🎟️ গেস্ট ভাউচার কোড দিয়ে লগইন",
+        voucherLabel: "গেস্ট ভাউচার কোড",
+        voucherPlaceholder: "PASS-XXXX",
+        btnRedeem: "সংযোগ করুন",
+        btnRedeeming: "ভাউচার যাচাই হচ্ছে...",
+        errorVoucherEmpty: "অনুগ্রহ করে আপনার ভাউচার কোড লিখুন।"
+      }
+    };
+
+    let currentLang = 'bn';
+    let currentUserName = '';
+    let currentDuration = 0;
+    let waitingSeconds = 0;
+    let authorizedWaitCount = 0;
+    let elapsedTimer = null;
+    let pollTimer = null;
+    let activeViewId = 'requestView';
+
+    const mainCard = document.getElementById('mainCard');
+    const glowSphere = document.getElementById('glowSphere');
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      const t = translations[lang] || translations.bn;
+      document.querySelectorAll('[data-en]').forEach(el => {
+        const val = el.getAttribute('data-' + lang);
+        if (val) el.innerHTML = val;
+      });
+
+      const langEnBtn = document.getElementById('langEnBtn');
+      if (langEnBtn) langEnBtn.classList.toggle('active', lang === 'en');
+      const langBnBtn = document.getElementById('langBnBtn');
+      if (langBnBtn) langBnBtn.classList.toggle('active', lang === 'bn');
+
+      // Top bar badge: shows custom gateway name if configured, otherwise language default
+      const netNameEl = document.getElementById('networkName');
+      if (netNameEl) netNameEl.textContent = window.__customGatewayName || t.networkName;
+
+      // Welcome notice: shows custom announcement if configured, otherwise language default
+      if (window.__customWelcomeNotice) {
+        const titleEl = document.getElementById('titleText');
+        if (titleEl) titleEl.textContent = window.__customWelcomeNotice;
+      }
+
+      // View 1: Request
+      const labelNameEl = document.getElementById('labelName');
+      if (labelNameEl) labelNameEl.textContent = t.labelName;
+      const userNameEl = document.getElementById('userName');
+      if (userNameEl) userNameEl.placeholder = t.placeholderName || '';
+      const btnTextEl = document.getElementById('btnText');
+      if (btnTextEl) btnTextEl.textContent = t.btnSubmit;
+
+      // Voucher section
+      const dividerEl = document.getElementById('dividerOrText');
+      if (dividerEl) dividerEl.textContent = t.dividerOr;
+      const vToggleEl = document.getElementById('btnVoucherToggleText');
+      if (vToggleEl) vToggleEl.textContent = t.btnVoucherToggle;
+      const vLabelEl = document.getElementById('voucherLabel');
+      if (vLabelEl) vLabelEl.textContent = t.voucherLabel;
+      const vInputEl = document.getElementById('voucherCode');
+      if (vInputEl) vInputEl.placeholder = t.voucherPlaceholder || 'PASS-XXXX';
+      const vRedeemEl = document.getElementById('btnRedeemText');
+      if (vRedeemEl) vRedeemEl.textContent = t.btnRedeem;
+
+      // View 2: Waiting
+      const wb = document.getElementById('waitingBadgeText'); if (wb) wb.textContent = t.waitingBadge;
+      const wt = document.getElementById('waitingTitleText'); if (wt) wt.textContent = t.waitingTitle;
+      const wp = document.getElementById('waitingSubPrefix'); if (wp) wp.textContent = t.waitingSubPrefix;
+      const ws = document.getElementById('waitingSubSuffix'); if (ws) ws.textContent = t.waitingSubSuffix;
+      const wl = document.getElementById('waitingStatusLabel'); if (wl) wl.textContent = t.waitingStatusLabel;
+      const wx = document.getElementById('waitingStatusText'); if (wx) wx.textContent = t.waitingStatusVal;
+      const wtl = document.getElementById('waitingTimerLabel'); if (wtl) wtl.textContent = t.waitingTimerLabel;
+      const wtt = document.getElementById('waitingTipText'); if (wtt) wtt.textContent = t.waitingTip;
+      updateTimerDisplay();
+
+      // View 3: Success
+      const sb = document.getElementById('successBadgeText'); if (sb) sb.textContent = t.successBadge;
+      const st = document.getElementById('successTitleText'); if (st) st.textContent = t.successTitle;
+      const sp = document.getElementById('successSubPrefix'); if (sp) sp.textContent = t.successSubPrefix;
+      const ss = document.getElementById('successSubSuffix'); if (ss) ss.textContent = t.successSubSuffix;
+      const sl = document.getElementById('successStatusLabel'); if (sl) sl.textContent = t.successStatusLabel;
+      const sx = document.getElementById('successStatusVal'); if (sx) sx.textContent = t.successStatusVal;
+      const sdl = document.getElementById('successDurationLabel'); if (sdl) sdl.textContent = t.successDurationLabel;
+      const bb = document.getElementById('btnBrowseText'); if (bb) bb.textContent = t.btnBrowse;
+      const stt = document.getElementById('successTipText'); if (stt) stt.textContent = t.successTip;
+      updateDurationDisplay(currentDuration);
+
+      // View 4: Rejected
+      const rb = document.getElementById('rejectedBadgeText'); if (rb) rb.textContent = t.rejectedBadge;
+      const rt = document.getElementById('rejectedTitleText'); if (rt) rt.textContent = t.rejectedTitle;
+      const rs = document.getElementById('rejectedSubText'); if (rs) rs.textContent = t.rejectedSub;
+      const rbt = document.getElementById('btnTryAgainText'); if (rbt) rbt.textContent = t.btnTryAgain;
+    }
+
+    function toBanglaDigits(str) {
+      const bn = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+      return String(str).replace(/[0-9]/g, d => bn[d]);
+    }
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    function updateTimerDisplay() {
+      const formatted = formatTime(waitingSeconds);
+      const el = document.getElementById('waitingTimerVal');
+      if (el) {
+        el.textContent = currentLang === 'bn' ? toBanglaDigits(formatted) : formatted;
+      }
+    }
+
+    function updateDurationDisplay(duration) {
+      currentDuration = duration;
+      const t = translations[currentLang];
+      const el = document.getElementById('successDurationVal');
+      if (!el) return;
+
+      if (!duration || duration === 0) {
+        el.textContent = t.durationUnlimited;
+      } else if (duration % 1440 === 0) {
+        const d = duration / 1440;
+        const ds = currentLang === 'bn' ? toBanglaDigits(d) : String(d);
+        el.textContent = currentLang === 'bn' ? `${ds} দিন` : `${ds} Day${d > 1 ? 's' : ''}`;
+      } else if (duration === 60) {
+        el.textContent = t.durationHour;
+      } else {
+        const numStr = currentLang === 'bn' ? toBanglaDigits(duration) : String(duration);
+        el.textContent = t.durationMinutes.replace('{n}', numStr);
+      }
+    }
+
+    function switchView(viewId) {
+      activeViewId = viewId;
+      const views = ['requestView', 'waitingView', 'successView', 'rejectedView'];
+      views.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = (id === viewId) ? 'block' : 'none';
+      });
+
+      // Update Card & Glow Theme
+      mainCard.className = '';
+      glowSphere.className = 'glow-sphere';
+
+      if (viewId === 'waitingView') {
+        mainCard.classList.add('waiting-mode');
+        glowSphere.classList.add('waiting-glow');
+      } else if (viewId === 'successView') {
+        mainCard.classList.add('success-mode');
+        glowSphere.classList.add('success-glow');
+      } else if (viewId === 'rejectedView') {
+        mainCard.classList.add('rejected-mode');
+        glowSphere.classList.add('rejected-glow');
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // openNDS Parameter Extraction (FAS & Silent MAC handling)
+    // -------------------------------------------------------------------------
+    function parseFasParam(token) {
+      if (!token) return { clientMac: null, clientIp: null, gatewayAddress: null, gatewayName: null };
+      try {
+        let cleaned = token.trim();
+        if (cleaned.includes('%')) {
+          try { cleaned = decodeURIComponent(cleaned); } catch(e) {}
+        }
+        // Normalize URLSearchParams space substitution and Base64URL characters
+        cleaned = cleaned.replace(/ /g, '+').replace(/-/g, '+').replace(/_/g, '/');
+        while (cleaned.length % 4 !== 0) {
+          cleaned += '=';
+        }
+        const decoded = atob(cleaned);
+        const macMatch = decoded.match(/clientmac=([0-9a-fA-F:]{17})/i) ||
+          decoded.match(/clientmac=([0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2})/i);
+        const ipMatch = decoded.match(/clientip=([0-9.]+)/i);
+        const gwMatch = decoded.match(/gatewayaddress=([0-9.]+)/i);
+        const gwPortMatch = decoded.match(/gatewayport=([0-9]+)/i);
+        const tokMatch = decoded.match(/tok=([a-zA-Z0-9_-]+)/i);
+        const nameMatch = decoded.match(/gatewayname=([^,]+)/i);
+        return {
+          clientMac: macMatch ? macMatch[1].toLowerCase().replace(/-/g, ':') : null,
+          clientIp: ipMatch ? ipMatch[1] : null,
+          gatewayAddress: gwMatch ? gwMatch[1] : null,
+          gatewayPort: gwPortMatch ? gwPortMatch[1] : '2050',
+          tok: tokMatch ? tokMatch[1] : null,
+          gatewayName: nameMatch ? nameMatch[1].trim() : null,
+        };
+      } catch (err) {
+        console.warn('FAS token decode error:', err);
+        return { clientMac: null, clientIp: null, gatewayAddress: null, gatewayPort: '2050', tok: null, gatewayName: null };
+      }
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const fasParam = params.get('fas') || '';
+    const fasData = parseFasParam(fasParam);
+
+    const rawMac = params.get('clientmac') || params.get('mac') || params.get('client_mac') || '';
+    const rawIp = params.get('clientip') || params.get('ip') || params.get('client_ip') || '';
+    const rawTok = params.get('tok') || (fasData && fasData.tok) || '';
+    const rawGwAddress = params.get('gatewayaddress') || (fasData && fasData.gatewayAddress) || '';
+    const rawGwPort = params.get('gatewayport') || (fasData && fasData.gatewayPort) || '2050';
+
+    const resolvedMac = fasData.clientMac || rawMac;
+    const resolvedIp = fasData.clientIp || rawIp;
+
+    // Helper: Generate or retrieve persistent mock MAC with sandbox protection
+    let inMemoryMockMac = null;
+    function getOrCreateClientMac() {
+      if (resolvedMac && resolvedMac.trim()) {
+        return resolvedMac.trim().toLowerCase();
+      }
+      try {
+        let storedMac = localStorage.getItem('opennds_client_mac');
+        if (!storedMac) {
+          const bytes = [0x02];
+          for (let i = 0; i < 5; i++) {
+            bytes.push(Math.floor(Math.random() * 256));
+          }
+          storedMac = bytes.map(b => b.toString(16).padStart(2, '0')).join(':');
+          try { localStorage.setItem('opennds_client_mac', storedMac); } catch (e) {}
+        }
+        return storedMac;
+      } catch (storageErr) {
+        if (!inMemoryMockMac) {
+          const bytes = [0x02];
+          for (let i = 0; i < 5; i++) {
+            bytes.push(Math.floor(Math.random() * 256));
+          }
+          inMemoryMockMac = bytes.map(b => b.toString(16).padStart(2, '0')).join(':');
+        }
+        return inMemoryMockMac;
+      }
+    }
+
+    const clientMacAddress = getOrCreateClientMac();
+    const clientMacInput = document.getElementById('clientMac');
+    if (clientMacInput) clientMacInput.value = clientMacAddress;
+
+    const accessForm = document.getElementById('accessForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const errorAlert = document.getElementById('errorAlert');
+
+    // Apply default language on initial load
+    setLanguage('bn');
+
+    const userNameInput = document.getElementById('userName');
+    if (userNameInput) {
+      userNameInput.value = '';
+    }
+
+    // -------------------------------------------------------------------------
+    // Form Submission & Flow Management
+    // -------------------------------------------------------------------------
+    accessForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorAlert.style.display = 'none';
+
+      const name = document.getElementById('userName').value.trim();
+      const t = translations[currentLang];
+
+      if (!name) {
+        showError(t.errorName);
+        return;
+      }
+
+      currentUserName = name;
+      setLoading(true);
+
+      try {
+        await sendAccessRequest(name, name);
+      } catch (err) {
+        showError(err.message || t.errorDefault);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    // -------------------------------------------------------------------------
+    // Guest Voucher Redemption Flow
+    // -------------------------------------------------------------------------
+    const toggleVoucherBtn = document.getElementById('toggleVoucherBtn');
+    const voucherSection = document.getElementById('voucherSection');
+    const redeemVoucherBtn = document.getElementById('redeemVoucherBtn');
+    const voucherCodeInput = document.getElementById('voucherCode');
+    const voucherSpinner = document.getElementById('voucherSpinner');
+
+    if (toggleVoucherBtn && voucherSection) {
+      toggleVoucherBtn.addEventListener('click', () => {
+        const isHidden = voucherSection.style.display === 'none';
+        voucherSection.style.display = isHidden ? 'block' : 'none';
+        if (isHidden && voucherCodeInput) voucherCodeInput.focus();
+      });
+    }
+
+    if (redeemVoucherBtn && voucherCodeInput) {
+      redeemVoucherBtn.addEventListener('click', async () => {
+        errorAlert.style.display = 'none';
+        const code = voucherCodeInput.value.trim().toUpperCase();
+        const userName = (userNameInput && userNameInput.value.trim()) || 'Guest User';
+        const t = translations[currentLang];
+
+        if (!code) {
+          showError(t.errorVoucherEmpty || 'Please enter your voucher code.');
+          return;
+        }
+
+        redeemVoucherBtn.disabled = true;
+        if (voucherSpinner) voucherSpinner.style.display = 'inline-block';
+        const ra = document.getElementById('redeemArrow'); if (ra) ra.style.display = 'none';
+
+        try {
+          const res = await fetch('/api/voucher', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              code,
+              mac: clientMacAddress,
+              ip: resolvedIp || undefined,
+              name: userName
+            })
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.error || 'Invalid or expired voucher code.');
+          }
+
+          showSuccessView(userName, data.duration || 120);
+
+          // If connected via openNDS captive portal with token, follow gateway callback
+          if (rawTok) {
+            const targetGw = rawGwAddress || '192.168.10.1';
+            setTimeout(() => {
+              window.location.href = `http://${targetGw}:${rawGwPort}/opennds_auth/?tok=${encodeURIComponent(rawTok)}`;
+            }, 1200);
+          }
+        } catch (err) {
+          showError(err.message || 'ভাউচার সক্রিয় করা সম্ভব হয়নি।');
+        } finally {
+          redeemVoucherBtn.disabled = false;
+          if (voucherSpinner) voucherSpinner.style.display = 'none';
+          const ra2 = document.getElementById('redeemArrow'); if (ra2) ra2.style.display = '';
+        }
+      });
+    }
+
+    function startWaitingView(name) {
+      currentUserName = name;
+      document.getElementById('waitingName').textContent = name;
+      waitingSeconds = 0;
+      authorizedWaitCount = 0;
+      updateTimerDisplay();
+
+      switchView('waitingView');
+
+      // Stop existing timers
+      stopAllTimers();
+
+      // Start elapsed timer (every 1s)
+      elapsedTimer = setInterval(() => {
+        waitingSeconds++;
+        updateTimerDisplay();
+      }, 1000);
+
+      // Start status polling (every 2.5s)
+      checkApprovalStatus();
+      pollTimer = setInterval(checkApprovalStatus, 2500);
+    }
+
+    async function checkApprovalStatus() {
+      if (!clientMacAddress) return;
+
+      try {
+        const res = await fetch(`/api/status?mac=${encodeURIComponent(clientMacAddress)}`);
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const status = String(data.status || '').toLowerCase();
+
+        if (status === 'authenticated') {
+          stopAllTimers();
+          showSuccessView(data.name || currentUserName, data.duration);
+        } else if (status === 'authorized') {
+          // Admin approved in Telegram; waiting for router sync to confirm firewall authorization
+          authorizedWaitCount++;
+          const waitingStatus = document.getElementById('waitingStatusText');
+          if (waitingStatus) {
+            waitingStatus.textContent = currentLang === 'bn' ? 'অনুমোদিত! রাউটারে সংযোগ সক্রিয় হচ্ছে...' : 'Approved! Activating router...';
+          }
+          if (authorizedWaitCount >= 4) {
+            stopAllTimers();
+            showSuccessView(data.name || currentUserName, data.duration);
+          }
+        } else if (status === 'terminated' || status === 'rejected') {
+          stopAllTimers();
+          showRejectedView(data.name || currentUserName);
+        }
+      } catch (err) {
+        // Tolerated during network switch or router firewall refresh
+      }
+    }
+
+    function showSuccessView(name, duration) {
+      stopAllTimers();
+      currentUserName = name || currentUserName;
+      document.getElementById('successName').textContent = currentUserName;
+      updateDurationDisplay(duration);
+      switchView('successView');
+
+      // Trigger captive network assistant connectivity probe
+      try {
+        fetch('http://connectivitycheck.gstatic.com/generate_204', { mode: 'no-cors', cache: 'no-store' }).catch(() => {});
+        fetch('http://captive.apple.com/hotspot-detect.html', { mode: 'no-cors', cache: 'no-store' }).catch(() => {});
+      } catch (e) {}
+
+      // Auto-dismiss or set browse button to HTTP endpoint so OS closes CNA cleanly
+      const btnBrowse = document.getElementById('btnStartBrowsing');
+      if (btnBrowse) {
+        btnBrowse.removeAttribute('target');
+        btnBrowse.href = 'http://connectivitycheck.gstatic.com/generate_204';
+        btnBrowse.onclick = (e) => {
+          e.preventDefault();
+          window.location.href = 'http://connectivitycheck.gstatic.com/generate_204';
+        };
+      }
+    }
+
+    function showRejectedView(name) {
+      stopAllTimers();
+      switchView('rejectedView');
+    }
+
+    function resetToRequestView() {
+      stopAllTimers();
+      try {
+        sessionStorage.removeItem('wifi_requested_mac');
+        sessionStorage.removeItem('wifi_requested_name');
+        sessionStorage.removeItem('wifi_requested_time');
+      } catch (e) {}
+
+      switchView('requestView');
+      const input = document.getElementById('userName');
+      if (input) input.value = '';
+    }
+
+    function stopAllTimers() {
+      if (elapsedTimer) {
+        clearInterval(elapsedTimer);
+        elapsedTimer = null;
+      }
+      if (pollTimer) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    }
+
+    function setLoading(isLoading) {
+      submitBtn.disabled = isLoading;
+      const t = translations[currentLang];
+      if (isLoading) {
+        btnText.textContent = t.btnSubmitting;
+        btnSpinner.style.display = 'inline-block';
+      } else {
+        btnText.textContent = t.btnSubmit;
+        btnSpinner.style.display = 'none';
+      }
+    }
+
+    function showError(msg) {
+      errorAlert.innerHTML = '<svg class="i"><use href="#i-alert"/></svg><span></span>';
+      errorAlert.querySelector('span').textContent = msg;
+      errorAlert.style.display = 'flex';
+      try { errorAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+    }
+
+    // -------------------------------------------------------------------------
+    // Session Restoration: Check if user was already waiting or authorized
+    // -------------------------------------------------------------------------
+    (async function checkExistingSession() {
+      try {
+        const storedMac = sessionStorage.getItem('wifi_requested_mac');
+        const storedName = sessionStorage.getItem('wifi_requested_name');
+        const storedTime = parseInt(sessionStorage.getItem('wifi_requested_time') || '0', 10);
+
+        // If request was made in last 30 minutes, resume check
+        if (storedMac && storedMac === clientMacAddress && (Date.now() - storedTime) < 30 * 60 * 1000) {
+          currentUserName = storedName || '';
+          const res = await fetch(`/api/status?mac=${encodeURIComponent(clientMacAddress)}`);
+          if (res.ok) {
+            const data = await res.json();
+            const st = String(data.status || '').toLowerCase();
+            if (st === 'authorized' || st === 'authenticated') {
+              showSuccessView(data.name || storedName, data.duration);
+            } else if (st === 'pending') {
+              waitingSeconds = Math.min(Math.floor((Date.now() - storedTime) / 1000), 1800);
+              startWaitingView(storedName || '');
+            }
+          }
+        }
+      } catch (e) {}
+    })();
+  
+    // =========================================================================
+    // CyberWave: Packages & Payment (PhonePe / Google Pay / Paytm)
+    // =========================================================================
+    // >>> EDIT THESE: your receiving UPI IDs / numbers <<<
+    const PAYMENT_METHODS = {
+      phonepe: { label: 'PhonePe',    color: '#5f259f', to: 'Q07543927@ybl' },
+      gpay:    { label: 'Google Pay', color: '#1a73e8', to: 'Q07543927@ybl' },
+      paytm:   { label: 'Paytm',      color: '#00b9f1', to: 'Q07543927@ybl' }
+    };
+
+    // minutes: 1440 = 1 day. Admin approval duration matches these values.
+    const PACKAGES = [
+      { id: '1D',  minutes: 1440,  price: 10,  en: '1 Day',   bn: '১ দিন' },
+      { id: '7D',  minutes: 10080, price: 40,  en: '7 Days',  bn: '৭ দিন', pop: true },
+      { id: '30D', minutes: 43200, price: 100, en: '30 Days', bn: '৩০ দিন' }
+    ];
+
+    let selectedPkg = PACKAGES[1];
+    let selectedMethod = 'phonepe';
+
+    async function loadDynamicPortalConfig() {
+      try {
+        let res = await fetch('/api/config?_=' + Date.now());
+        if (!res.ok) res = await fetch('/portal-config.json?_=' + Date.now());
+        if (res.ok) {
+          const data = await res.json();
+          const cfg = data.config || data;
+
+          const ppe = cfg.payments?.phonepe?.to || cfg.phonepe_upi;
+          if (ppe) PAYMENT_METHODS.phonepe.to = ppe;
+
+          const ptm = cfg.payments?.paytm?.to || cfg.paytm_upi;
+          if (ptm) PAYMENT_METHODS.paytm.to = ptm;
+
+          const gpy = cfg.payments?.gpay?.to || cfg.gpay_upi;
+          if (gpy) PAYMENT_METHODS.gpay.to = gpy;
+
+          renderPayTabs();
+
+          if (cfg.portalTitle) {
+            window.__customPortalTitle = cfg.portalTitle;
+            document.title = cfg.portalTitle;
+            const brandEl = document.querySelector('.brand b');
+            if (brandEl) {
+              const parts = cfg.portalTitle.trim().split(/\s+/);
+              if (parts.length > 1) {
+                brandEl.innerHTML = `${parts[0]}<span>${parts.slice(1).join(' ')}</span>`;
+              } else {
+                brandEl.textContent = cfg.portalTitle;
+              }
+            }
+            const footerBrand = document.getElementById('footerBrandName');
+            if (footerBrand) footerBrand.textContent = cfg.portalTitle;
+          }
+
+          if (cfg.gatewayName) {
+            window.__customGatewayName = cfg.gatewayName;
+            const netEl = document.getElementById('networkName');
+            if (netEl) netEl.textContent = cfg.gatewayName;
+          }
+
+          if (cfg.welcomeNotice) {
+            window.__customWelcomeNotice = cfg.welcomeNotice;
+            const titleEl = document.getElementById('titleText');
+            if (titleEl) titleEl.textContent = cfg.welcomeNotice;
+          }
+
+          if (cfg.supportPhone) {
+            window.__customSupportPhone = cfg.supportPhone;
+            const footRow = document.getElementById('footerSupportRow');
+            const footLink = document.getElementById('footerPhoneLink');
+            if (footRow && footLink) {
+              footRow.style.display = 'block';
+              footLink.textContent = cfg.supportPhone;
+              footLink.href = 'tel:' + cfg.supportPhone.replace(/[^\d+]/g, '');
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load portal configuration:', e);
+      }
+    }
+    loadDynamicPortalConfig();
+
+    function renderPackages() {
+      const grid = document.getElementById('pkgGrid');
+      grid.innerHTML = PACKAGES.map(p => {
+        const d = Math.round(p.minutes / 1440);
+        return `
+        <div class="pkg ${p.pop ? 'pop' : ''}">
+          ${p.pop ? '<span class="tag" data-en="Popular" data-bn="জনপ্রিয়">জনপ্রিয়</span>' : ''}
+          <div class="pkg-badge"><b data-en="${d}" data-bn="${toBanglaDigits(d)}">${toBanglaDigits(d)}</b><span data-en="${d > 1 ? 'days' : 'day'}" data-bn="দিন">দিন</span></div>
+          <div>
+            <div class="pkg-name" data-en="${p.en}" data-bn="${p.bn}">${p.bn}</div>
+            <div class="pkg-meta"><svg class="i"><use href="#i-check"/></svg><span data-en="Unlimited data · 1 device" data-bn="আনলিমিটেড ডেটা · ১টি ডিভাইস">আনলিমিটেড ডেটা · ১টি ডিভাইস</span></div>
+          </div>
+          <div class="pkg-buy">
+            <div class="pkg-price" data-en="৳${p.price}" data-bn="৳${toBanglaDigits(p.price)}">৳${toBanglaDigits(p.price)}</div>
+            <button class="btn" type="button" onclick="openPay('${p.id}')" data-en="Buy" data-bn="কিনুন">কিনুন</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function openPay(id) {
+      selectedPkg = PACKAGES.find(p => p.id === id) || PACKAGES[0];
+      const bn = currentLang === 'bn';
+      document.getElementById('paySumName').textContent = bn ? selectedPkg.bn : selectedPkg.en;
+      document.getElementById('paySumMeta').textContent = bn ? 'আনলিমিটেড ডেটা' : 'Unlimited data';
+      document.getElementById('paySumPrice').textContent = '৳' + (bn ? toBanglaDigits(selectedPkg.price) : selectedPkg.price);
+      const nm = document.getElementById('userName');
+      const pn = document.getElementById('payName');
+      if (!pn.value && nm && nm.value) pn.value = nm.value.slice(0, 20);
+      renderPayTabs();
+      document.getElementById('payModal').classList.add('show');
+    }
+    function closePay() { document.getElementById('payModal').classList.remove('show'); }
+
+    function renderPayTabs() {
+      const tabs = document.getElementById('payTabs');
+      if (!tabs) return;
+      tabs.innerHTML = Object.keys(PAYMENT_METHODS).map(k =>
+        `<button type="button" class="tab ${k === selectedMethod ? 'active' : ''}" onclick="selectMethod('${k}')">${PAYMENT_METHODS[k].label}</button>`).join('');
+      const toVal = PAYMENT_METHODS[selectedMethod]?.to || '';
+      const toEl = document.getElementById('payToValue');
+      if (toEl) toEl.textContent = toVal;
+      const appBtn = document.getElementById('payAppBtn');
+      if (appBtn && selectedPkg) {
+        appBtn.href = `upi://pay?pa=${encodeURIComponent(toVal)}&pn=CyberWave&am=${selectedPkg.price}&cu=INR`;
+      }
+    }
+    function selectMethod(k) { selectedMethod = k; renderPayTabs(); }
+
+    document.getElementById('payCopyBtn').addEventListener('click', () => {
+      const v = PAYMENT_METHODS[selectedMethod].to;
+      const done = () => { const b = document.getElementById('payCopyBtn'); b.textContent = '✓'; setTimeout(() => b.textContent = 'Copy', 1500); };
+      if (navigator.clipboard) navigator.clipboard.writeText(v).then(done).catch(done); else done();
+    });
+
+    document.getElementById('paySubmitBtn').addEventListener('click', async () => {
+      const t = translations[currentLang];
+      const trx = document.getElementById('payTrx').value.trim().replace(/\s+/g, '');
+      const who = document.getElementById('payName').value.trim() || 'Guest';
+      if (trx.length < 6) {
+        closePay();
+        showError(currentLang === 'bn' ? 'সঠিক Transaction ID লিখুন।' : 'Please enter a valid Transaction ID.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      // Packed into the existing "name" field so the admin sees it in the dashboard / Telegram.
+      const packed = `${who} ${selectedPkg.id} Rs${selectedPkg.price} ${PAYMENT_METHODS[selectedMethod].label} #${trx}`.slice(0, 64);
+      const btn = document.getElementById('paySubmitBtn');
+      btn.disabled = true;
+      try {
+        closePay();
+        await sendAccessRequest(packed, who);
+      } catch (err) {
+        showError(err.message || t.errorDefault);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } finally { btn.disabled = false; }
+    });
+
+    // Shared request sender (same endpoints as the original name form)
+    async function sendAccessRequest(nameForServer, nameToShow) {
+      const t = translations[currentLang];
+      const payload = { name: nameForServer, mac: clientMacAddress, ip: resolvedIp || undefined, fas: fasParam || undefined };
+      let res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (!res.ok && res.status !== 400) {
+        res = await fetch('/api/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || t.errorDefault);
+      try {
+        sessionStorage.setItem('wifi_requested_mac', clientMacAddress);
+        sessionStorage.setItem('wifi_requested_name', nameToShow || nameForServer);
+        sessionStorage.setItem('wifi_requested_time', String(Date.now()));
+      } catch (e) {}
+      startWaitingView(nameToShow || nameForServer);
+    }
+
+
+    // =========================================================================
+    // Tabs (Voucher / Buy / Status / Request)
+    // =========================================================================
+    const TAB_ORDER = ['voucher', 'buy', 'status', 'request'];
+    function showTab(name) {
+      const idx = Math.max(0, TAB_ORDER.indexOf(name));
+      document.getElementById('tabbar').style.setProperty('--i', idx);
+      document.querySelectorAll('.tabbtn').forEach(b => {
+        const on = b.dataset.tab === name;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      document.querySelectorAll('.panel').forEach(p => p.classList.toggle('show', p.id === 'panel-' + name));
+      errorAlert.style.display = 'none';
+      if (name === 'status') checkMyStatus();
+    }
+    document.querySelectorAll('.tabbtn').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+    // Status tab: look up this device's current request/session
+    async function checkMyStatus() {
+      const bn = currentLang === 'bn';
+      const orb = document.getElementById('statOrb');
+      const title = document.getElementById('statTitle');
+      const sub = document.getElementById('statSub');
+      title.removeAttribute('data-en'); title.removeAttribute('data-bn');
+      sub.removeAttribute('data-en'); sub.removeAttribute('data-bn');
+      document.getElementById('statMac').textContent = clientMacAddress || '—';
+      title.textContent = bn ? 'যাচাই করা হচ্ছে...' : 'Checking...';
+      sub.textContent = '';
+      orb.classList.remove('on');
+      try {
+        const res = await fetch(`/api/status?mac=${encodeURIComponent(clientMacAddress)}`);
+        const data = await res.json();
+        const st = String(data.status || '').toLowerCase();
+        const map = {
+          authenticated: [true,  'ইন্টারনেট চালু আছে', 'Internet is active', 'এই ডিভাইস অনলাইন ও প্রস্তুত।', 'This device is online and ready.'],
+          authorized:    [true,  'অনুমোদিত হয়েছে', 'Approved', 'রাউটারে সংযোগ চালু হচ্ছে...', 'Activating on the router...'],
+          pending:       [false, 'অনুমোদনের অপেক্ষায়', 'Waiting for approval', 'অ্যাডমিন যাচাই করছেন, একটু অপেক্ষা করুন।', 'The admin is reviewing your request.'],
+          terminated:    [false, 'অনুরোধ বাতিল হয়েছে', 'Request declined', 'প্রয়োজনে নতুন করে অনুরোধ পাঠান।', 'Send a new request if needed.'],
+          rejected:      [false, 'অনুরোধ বাতিল হয়েছে', 'Request declined', 'প্রয়োজনে নতুন করে অনুরোধ পাঠান।', 'Send a new request if needed.'],
+          not_found:     [false, 'কোনো সক্রিয় সেশন নেই', 'No active session', 'ভাউচার ব্যবহার করুন বা প্যাকেজ কিনুন।', 'Use a voucher or buy a package.']
+        };
+        const m = map[st] || map.not_found;
+        orb.classList.toggle('on', m[0]);
+        title.textContent = bn ? m[1] : m[2];
+        sub.textContent = bn ? m[3] : m[4];
+        document.getElementById('statName').textContent = data.name || '—';
+        const dEl = document.getElementById('statDur');
+        if (st === 'authenticated' || st === 'authorized') {
+          const keep = document.getElementById('successDurationVal').textContent;
+          updateDurationDisplay(data.duration);
+          dEl.textContent = document.getElementById('successDurationVal').textContent;
+          document.getElementById('successDurationVal').textContent = keep;
+        } else { dEl.textContent = '—'; }
+      } catch (e) {
+        title.textContent = bn ? 'যাচাই করা যায়নি' : 'Could not check';
+        sub.textContent = bn ? 'কিছুক্ষণ পর আবার চেষ্টা করুন।' : 'Please try again in a moment.';
+      }
+    }
+    document.getElementById('statBtn').addEventListener('click', checkMyStatus);
+
+    renderPackages();
+    setLanguage(currentLang);
+  </script>
+</body>
+</html>

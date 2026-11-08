@@ -1,0 +1,22 @@
+# ==============================================================================
+# CyberWave Remote Router Bridge Agent Configuration
+# Location on OpenWrt: /etc/cyberwave/agent.conf (chmod 0600)
+# ==============================================================================
+
+# CyberWave Cloud Server Endpoint (HTTPS)
+SERVER_URL="https://cyberwave.ai.studio"
+
+# Unique Cryptographic Router Identity (e.g. cw-c6-xxxx)
+ROUTER_ID="cw-c6-gateway"
+
+# Cryptographically Secure Pairing Token / Shared Secret
+SECRET_KEY="REPLACE_WITH_YOUR_PAIRING_TOKEN"
+
+# Standard Outbound Heartbeat & Polling Interval (in seconds)
+POLL_INTERVAL=10
+
+# High-Frequency Polling Interval when an active command is in flight (in seconds)
+BURST_INTERVAL=3
+
+# Local File Log Location
+LOG_FILE="/var/log/cyberwave-agent.log"

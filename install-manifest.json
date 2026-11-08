@@ -1,0 +1,50 @@
+{
+  "name": "CyberWave Archer C6 One-Click Bundle",
+  "version": "2.5.0",
+  "releaseDate": "2026-11-07",
+  "target": {
+    "board": "tplink,archer-c6-v3",
+    "model": "TP-Link Archer C6 US V3.2",
+    "firmware": "OpenWrt 25.12.6",
+    "architecture": "ramips/mt7621",
+    "minFreeFlashKb": 256,
+    "minFreeRamMb": 16
+  },
+  "requiredPackages": [
+    "jsonfilter"
+  ],
+  "optionalPackages": [
+    "opennds",
+    "ca-certificates"
+  ],
+  "components": {
+    "cyberwave-agent.sh": {
+      "sizeBytes": 40579,
+      "sha256": "ed4d128a2523aec89ba58e678b519cf0bc9c6e1a073d8b8ee29c200a720008fc"
+    },
+    "cyberwave-agent.init": {
+      "sizeBytes": 1039,
+      "sha256": "ef001f473fe807366cb12accdb8666caa68308537d3360fe202af24219153b55"
+    },
+    "guest-setup.sh": {
+      "sizeBytes": 7353,
+      "sha256": "e9287e340a32d521686023edfbf7c64206c15430259f1b00a07cf94ac760b819"
+    },
+    "opennds-setup.sh": {
+      "sizeBytes": 4459,
+      "sha256": "46a9c1a99a27977dafd1332774e5b0bfa78d8c08f4942a305156d39963d000e9"
+    },
+    "rollback.sh": {
+      "sizeBytes": 1812,
+      "sha256": "f203d7c172327886b04cb3084d9f92ad1893de3899ecc99f0736fe0c9d40e1d5"
+    },
+    "uninstall.sh": {
+      "sizeBytes": 3630,
+      "sha256": "47b5b4d49676b0b9e7c2966a9a6f9531d17f838a6e8e2fe641df062edb507821"
+    },
+    "agent.conf.example": {
+      "sizeBytes": 796,
+      "sha256": "0928defc1e2cca389b87457b9337e7427bf2a5693d5e8093af9b683fa7003208"
+    }
+  }
+}

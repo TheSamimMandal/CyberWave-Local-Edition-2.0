@@ -1,0 +1,15 @@
+# OpenWrt openNDS Sync Configuration (/etc/opennds/sync.conf)
+# Copy this file to /etc/opennds/sync.conf on your OpenWrt router
+
+# Mode 1: Command polling mode via Telegram Bot approval (default)
+API_URL="https://your-deployment.vercel.app/api/poll"
+
+# Mode 2: Direct FAS pending client authorization mode:
+# API_URL="https://your-deployment.vercel.app/api/pending-auth"
+# CONFIRM_URL="https://your-deployment.vercel.app/api/confirm-auth"
+# DEFAULT_AUTH_DURATION=0 # 0 for unlimited, or duration in minutes (e.g. 60)
+
+ROUTER_SECRET_KEY="your_shared_secret_key_matching_vercel"
+POLL_INTERVAL=5
+LOG_TAG="opennds-sync"
+

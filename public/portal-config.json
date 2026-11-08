@@ -1,0 +1,27 @@
+{
+  "portalTitle": "CyberWave High Speed",
+  "gatewayName": "CyberWave 5G Zone",
+  "supportPhone": "+91 9999988888",
+  "welcomeNotice": "Welcome to CyberWave Ultra WiFi",
+  "phonepe_upi": "samim@ybl",
+  "paytm_upi": "samim@paytm",
+  "gpay_upi": "samim@okaxis",
+  "payment_instructions": "যেকোনো UPI অ্যাপ দিয়ে পেমেন্ট করে Transaction ID দিন।",
+  "payments": {
+    "phonepe": {
+      "label": "PhonePe",
+      "color": "#5f259f",
+      "to": "samim@ybl"
+    },
+    "paytm": {
+      "label": "Paytm",
+      "color": "#00b9f1",
+      "to": "samim@paytm"
+    },
+    "gpay": {
+      "label": "Google Pay",
+      "color": "#1a73e8",
+      "to": "samim@okaxis"
+    }
+  }
+}

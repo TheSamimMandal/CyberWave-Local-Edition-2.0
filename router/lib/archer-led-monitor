@@ -1,0 +1,80 @@
+#!/bin/sh
+# ==============================================================================
+# ArcherGuard C6 — Smart LAN & WAN LED Hardware Monitor Daemon
+#
+# Hardware: TP-Link Archer C6 v3 (MediaTek MT7621DAT + MT7530 Switch)
+# LAN LED: Lights up/blinks on active physical port (lan1-lan4); OFF if no cable.
+# WAN LED: Green on active internet (pppoe-wan); Amber if disconnected/no cable.
+# Max lines: < 250 (DRY Principle Enforced)
+# ==============================================================================
+
+LAN_LEDPATH="/sys/class/leds/green:lan"
+WAN_GREEN="/sys/class/leds/green:wan"
+WAN_AMBER="/sys/class/leds/amber:wan"
+
+last_lan="init"
+last_wan="init"
+
+set_lan_led() {
+    local port="$1"
+    if [ -n "$port" ]; then
+        echo netdev > "$LAN_LEDPATH/trigger" 2>/dev/null
+        echo "$port" > "$LAN_LEDPATH/device_name" 2>/dev/null
+        echo 1 > "$LAN_LEDPATH/link" 2>/dev/null
+        echo 1 > "$LAN_LEDPATH/rx" 2>/dev/null
+        echo 1 > "$LAN_LEDPATH/tx" 2>/dev/null
+        echo 500 > "$LAN_LEDPATH/interval" 2>/dev/null
+    else
+        echo none > "$LAN_LEDPATH/trigger" 2>/dev/null
+        echo 0 > "$LAN_LEDPATH/brightness" 2>/dev/null
+    fi
+}
+
+set_wan_led() {
+    local status="$1"
+    if [ "$status" = "1" ]; then
+        echo 0 > "$WAN_AMBER/brightness" 2>/dev/null
+        echo netdev > "$WAN_GREEN/trigger" 2>/dev/null
+        echo pppoe-wan > "$WAN_GREEN/device_name" 2>/dev/null
+        echo 1 > "$WAN_GREEN/link" 2>/dev/null
+        echo 1 > "$WAN_GREEN/rx" 2>/dev/null
+        echo 1 > "$WAN_GREEN/tx" 2>/dev/null
+        echo 500 > "$WAN_GREEN/interval" 2>/dev/null
+    else
+        echo none > "$WAN_GREEN/trigger" 2>/dev/null
+        echo 0 > "$WAN_GREEN/brightness" 2>/dev/null
+        echo 1 > "$WAN_AMBER/brightness" 2>/dev/null
+    fi
+}
+
+while true; do
+    # 1. Scan physical LAN ports (lan1 - lan4)
+    active_lan=""
+    for p in lan1 lan2 lan3 lan4; do
+        read c < "/sys/class/net/$p/carrier" 2>/dev/null
+        if [ "$c" = "1" ]; then
+            active_lan="$p"
+            break
+        fi
+    done
+
+    if [ "$active_lan" != "$last_lan" ]; then
+        set_lan_led "$active_lan"
+        last_lan="$active_lan"
+    fi
+
+    # 2. Check physical WAN link & PPPoE connection
+    wan_status=0
+    read wc < "/sys/class/net/wan/carrier" 2>/dev/null
+    if [ "$wc" = "1" ] && [ -d /sys/class/net/pppoe-wan ]; then
+        read wp < "/sys/class/net/pppoe-wan/carrier" 2>/dev/null
+        [ "$wp" = "1" ] && wan_status=1
+    fi
+
+    if [ "$wan_status" != "$last_wan" ]; then
+        set_wan_led "$wan_status"
+        last_wan="$wan_status"
+    fi
+
+    sleep 1
+done

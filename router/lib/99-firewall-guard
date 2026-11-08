@@ -1,0 +1,6 @@
+#!/bin/sh
+# ArcherGuard C6 — Instant Firewall Hotplug Health Guard
+[ "$ACTION" = ifup -o "$ACTION" = ifupdate ] || exit 0
+if ! nft list tables 2>/dev/null | grep -q "table inet fw4"; then
+    /usr/lib/archer_guard/watchdog.sh heal_fw >/dev/null 2>&1 &
+fi

@@ -1,0 +1,23 @@
+{
+  "registered": false,
+  "routerId": "cw-c6-5510ec67",
+  "routerName": "Archer C6 Install Test",
+  "model": "TP-Link Archer C6 v3.2",
+  "openwrtVersion": "OpenWrt 25.12.6",
+  "pairingToken": "",
+  "routerSecret": "",
+  "pairedAt": "2026-11-08T10:02:52.024Z",
+  "lastSeen": null,
+  "lastSeenEpoch": 0,
+  "status": "unpaired",
+  "isOnline": false,
+  "hardware": {
+    "architecture": "MediaTek MT7621AT dual-core MIPS 880MHz",
+    "ramMb": 128,
+    "flashMb": 16,
+    "dualBand": true,
+    "radio2g": "MediaTek MT7603E 802.11bgn",
+    "radio5g": "MediaTek MT7613BEN / MT7615E 802.11ac",
+    "ethernetPorts": "1x WAN Gigabit + 4x LAN Gigabit"
+  }
+}
